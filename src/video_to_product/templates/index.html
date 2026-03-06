@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Video to Product</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: system-ui, -apple-system, sans-serif; background: #f5f5f5; color: #333; line-height: 1.6; }
+        .container { max-width: 800px; margin: 0 auto; padding: 2rem 1rem; }
+        h1 { font-size: 1.5rem; margin-bottom: 1.5rem; }
+        h2 { font-size: 1.1rem; margin-bottom: 0.5rem; color: #555; }
+
+        .card {
+            background: white; border-radius: 8px; padding: 1.5rem;
+            margin-bottom: 1rem; box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .steps {
+            display: flex; gap: 0.5rem; margin-bottom: 1.5rem; flex-wrap: wrap;
+        }
+        .step {
+            padding: 0.3rem 0.8rem; border-radius: 20px; font-size: 0.85rem;
+            background: #e0e0e0; color: #888;
+        }
+        .step.active { background: #2563eb; color: white; }
+        .step.done { background: #16a34a; color: white; }
+
+        input[type="text"], input[type="url"] {
+            width: 100%; padding: 0.6rem; border: 1px solid #ddd; border-radius: 6px;
+            font-size: 1rem; margin-bottom: 0.5rem;
+        }
+        input[type="file"] { margin-bottom: 0.5rem; }
+
+        .btn {
+            display: inline-block; padding: 0.6rem 1.2rem; border: none; border-radius: 6px;
+            font-size: 0.95rem; cursor: pointer; text-decoration: none;
+            background: #2563eb; color: white; margin-right: 0.5rem; margin-top: 0.5rem;
+        }
+        .btn:hover { background: #1d4ed8; }
+        .btn.secondary { background: #6b7280; }
+        .btn.secondary:hover { background: #4b5563; }
+
+        .content-block {
+            background: #f8f9fa; border: 1px solid #e5e7eb; border-radius: 6px;
+            padding: 1rem; margin-top: 0.5rem; white-space: pre-wrap;
+            max-height: 400px; overflow-y: auto; font-size: 0.9rem;
+        }
+
+        .or-divider {
+            text-align: center; color: #999; margin: 0.8rem 0; font-size: 0.9rem;
+        }
+
+        .copy-btn {
+            background: #059669; padding: 0.4rem 0.8rem; font-size: 0.85rem;
+        }
+        .copy-btn:hover { background: #047857; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>Video to Product</h1>
+
+    {% set step = session.get('step', 'start') %}
+
+    <div class="steps">
+        <span class="step {{ 'active' if step == 'start' else 'done' if step != 'start' }}">1. Загрузка</span>
+        <span class="step {{ 'active' if step in ('uploaded', 'transcribing') else 'done' if step in ('transcribed', 'summarized', 'done') }}">2. Транскрипция</span>
+        <span class="step {{ 'active' if step == 'transcribed' else 'done' if step in ('summarized', 'done') }}">3. Саммари</span>
+        <span class="step {{ 'active' if step == 'summarized' else 'done' if step == 'done' }}">4. Продукт</span>
+    </div>
+
+    {% if step == 'start' %}
+    <div class="card">
+        <h2>Вставь URL видео</h2>
+        <form action="/url" method="post">
+            <input type="url" name="url" placeholder="https://youtube.com/watch?v=..." required>
+            <button type="submit" class="btn">Скачать аудио</button>
+        </form>
+
+        <div class="or-divider">или</div>
+
+        <h2>Загрузи аудио/видео файл</h2>
+        <form action="/upload" method="post" enctype="multipart/form-data">
+            <input type="file" name="file" accept="audio/*,video/*" required>
+            <br>
+            <button type="submit" class="btn">Загрузить</button>
+        </form>
+    </div>
+    {% endif %}
+
+    {% if step == 'uploaded' %}
+    <div class="card">
+        <h2>Источник: {{ session.get('source', '') }}</h2>
+        <p>Аудио готово к транскрипции.</p>
+        <form action="/transcribe" method="post">
+            <button type="submit" class="btn">Транскрибировать</button>
+        </form>
+    </div>
+    {% endif %}
+
+    {% if session.get('transcript') %}
+    <div class="card">
+        <h2>Транскрипт</h2>
+        <div class="content-block">{{ session['transcript'] }}</div>
+
+        {% if step == 'transcribed' %}
+        <form action="/summarize" method="post">
+            <button type="submit" class="btn">Создать саммари</button>
+        </form>
+        {% endif %}
+    </div>
+    {% endif %}
+
+    {% if session.get('summary') %}
+    <div class="card">
+        <h2>Саммари</h2>
+        <div class="content-block">{{ session['summary'] }}</div>
+
+        {% if step == 'summarized' %}
+        <form action="/generate" method="post">
+            <button type="submit" class="btn">Создать промпт агента</button>
+        </form>
+        {% endif %}
+    </div>
+    {% endif %}
+
+    {% if session.get('product') %}
+    <div class="card">
+        <h2>Системный промпт агента</h2>
+        <div class="content-block" id="product">{{ session['product'] }}</div>
+        <button class="btn copy-btn" onclick="navigator.clipboard.writeText(document.getElementById('product').textContent)">
+            Копировать
+        </button>
+    </div>
+    {% endif %}
+
+    {% if step != 'start' %}
+    <form action="/reset" method="post" style="margin-top: 1rem;">
+        <button type="submit" class="btn secondary">Начать заново</button>
+    </form>
+    {% endif %}
+</div>
+</body>
+</html>

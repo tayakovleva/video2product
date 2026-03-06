@@ -1,0 +1,10 @@
+.env
+tmp/
+*.m4a
+*.mp3
+*.wav
+*.mp4
+*.webm
+__pycache__/
+.venv/
+*.egg-info/

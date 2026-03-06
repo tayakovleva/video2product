@@ -13,7 +13,7 @@ Python 3.12, uv, FastAPI, Jinja2, yt-dlp, OpenAI Whisper API, Anthropic SDK
 ```bash
 uv run ruff check src/      # lint
 uv run ruff format src/     # format
-uv run uvicorn src.app:app --reload --port 8002  # local dev
+uv run uvicorn src.video_to_product.app:app --reload --port 8002  # local dev
 ```
 
 ## Deployment
