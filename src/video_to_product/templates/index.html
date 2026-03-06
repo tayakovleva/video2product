@@ -51,6 +51,14 @@
             text-align: center; color: #999; margin: 0.8rem 0; font-size: 0.9rem;
         }
 
+        .product-editor {
+            width: 100%; min-height: 300px; padding: 1rem; margin-top: 0.5rem;
+            border: 1px solid #e5e7eb; border-radius: 6px; background: #f8f9fa;
+            font-family: system-ui, -apple-system, sans-serif; font-size: 0.9rem;
+            line-height: 1.6; resize: vertical;
+        }
+        .product-editor:focus { outline: none; border-color: #2563eb; background: white; }
+
         .copy-btn {
             background: #059669; padding: 0.4rem 0.8rem; font-size: 0.85rem;
         }
@@ -128,8 +136,8 @@
     {% if session.get('product') %}
     <div class="card">
         <h2>Системный промпт агента</h2>
-        <div class="content-block" id="product">{{ session['product'] }}</div>
-        <button class="btn copy-btn" onclick="navigator.clipboard.writeText(document.getElementById('product').textContent)">
+        <textarea id="product" class="product-editor">{{ session['product'] }}</textarea>
+        <button class="btn copy-btn" onclick="navigator.clipboard.writeText(document.getElementById('product').value)">
             Копировать
         </button>
     </div>
